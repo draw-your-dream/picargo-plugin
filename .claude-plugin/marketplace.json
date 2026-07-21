@@ -1,0 +1,8 @@
+{
+  "name": "picaa",
+  "owner": { "name": "picaa" },
+  "description": "picaa 内部 Claude Code 插件市场:picaa-cargo 部署运维(远程 OAuth MCP + skills)",
+  "plugins": [
+    { "name": "picargo", "source": "./", "description": "picaa-cargo 部署与运维(MCP + skills)" }
+  ]
+}

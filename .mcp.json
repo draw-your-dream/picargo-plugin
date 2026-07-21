@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "picaa-cargo": {
+      "type": "http",
+      "url": "https://cargo.picaa.com/mcp",
+      "oauth": {
+        "clientId": "38jwbecDT1qsYUoG8YAE0bGnal9BnGxygf5shat1",
+        "callbackPort": 8611
+      }
+    }
+  }
+}
