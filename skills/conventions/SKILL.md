@@ -42,6 +42,7 @@ description: 为将要部署到 picaa-cargo(*.at.sowii.net)的代码——前端
   - ⚠️ 只能写 `low` / `medium` / `high`:拼错或写未知值 → **除发布者外无人可访问**(fail-closed),且**部署时不报错**(发布者自己仍看得到,极易误判"正常")——务必核对拼写。
   - `access.browser` 为 `anonymous` / `key` 时写了 `tier` → **422**。
   - 密级 → 具体用户组的映射由平台侧维护、可随时调整,清单里**只写别名、不写组名**。
+- `access.browser: anonymous` 的静态 artifact,资源文件(非 HTML/JS)经 CDN(`https://m.sowii.net`)**跨域**分发 → 页面自带 CSP 时须在 `img-src`/`font-src`/`media-src`/`connect-src` 放行 `https://m.sowii.net`;canvas 要读像素的 `<img>` 加 `crossorigin="anonymous"`;fetch 这类资源勿用 `credentials: 'include'` 或 `redirect: 'error'`。HTML 与 JS **仍同源**由平台 serve,Worker/Service Worker 不受影响 → 少一项 = CSP 拦截资源加载 / canvas taint / fetch 被浏览器拒绝。
 
 ## `cargo.yaml` 最小形状
 
