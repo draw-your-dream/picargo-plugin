@@ -1,6 +1,6 @@
 # picargo — Claude Code 插件
 
-> 🚀 **新成员快速接入**:打开 <https://claude.ai/claude-code/onboard/cKGyn9PuPwbI> —— 三步(装市场 → 装插件 → /mcp 授权)接入 picaa-cargo 部署工具。
+> 🚀 **新成员快速接入**:打开 <https://claude.ai/claude-code/onboard/cKGyn9PuPwbI>,按你的客户端选路径——Claude Code(CLI / VS Code)三步装插件;claude.ai 网页 / Claude 桌面端配连接器——即可接入 picaa-cargo 部署工具。
 
 在 Claude Code 里部署与运维 [picaa-cargo](https://github.com/draw-your-dream/picaa-cargo) 的 artifacts。
 插件通过**远程 OAuth MCP**(`https://cargo.picaa.com/mcp`)暴露 17 个工具:远程 deploy
