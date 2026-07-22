@@ -20,6 +20,7 @@ description: 为将要部署到 picaa-cargo(*.at.sowii.net)的代码——前端
 ## 动态服务(`type: dynamic`)
 
 - 必须监听 `0.0.0.0:$PORT`(`$PORT` 平台注入,默认 `8080`) → 绑 `127.0.0.1` 或写死其它端口,平台探针/网关连不上容器进程 → 部署失败。
+- 平台默认给容器挂 **TCP 探针**(打 `$PORT`:liveness 失败自动重启,readiness 失败摘流量)。若进程可能"活着但卡死"(死锁/事件循环挂起,但 TCP 仍能连上),在 `cargo.yaml` **顶层**声明 `healthcheck: /healthz` 升级为 HTTP GET 探针(应用需实现该路径,2xx/3xx 视为健康;不得位于 `/_cargo/*`) → 不声明时,卡死但仍能 accept TCP 的进程**不会被自动回收**。
 - 只有 `/data` 目录(需 `cargo.yaml` 里 `data: true` 显式开启)在重启/重部署后保留 → 其余文件系统(含 `/tmp`、`$HOME`、工作目录)都是临时的,重启即丢。
 - 请求鉴权的**唯一**可信依据是请求头 `X-Cargo-Identity`(裸 EdDSA JWS,**无** `Bearer ` 前缀)。验证时必须同时满足:`alg=EdDSA`(显式拒绝 `none`/`HS256`/RSA,防算法混淆)、`iss=https://cargo.picaa.com`、`aud=<你自己的 slug>`、`exp` 未过期;公钥从 `https://auth.cargo.picaa.com/.well-known/jwks.json` 按 JWT header 的 `kid` 选取 → **少验任一项 = 鉴权可被绕过**。便捷头 `X-Cargo-User-Id` / `X-Cargo-User-Name` 未签名,只能用于展示/日志,**绝不能**作鉴权依据。
 - 不要用 `Authorization` 头做自定义鉴权 → 在 `*.at.sowii.net` 上该头被平台保留给机器令牌 `cargo_tok_*`,任何非法值都会被网关直接 **401**、到不了应用代码。自定义凭证请改用别的头(如 `X-My-Key`)。
@@ -57,6 +58,7 @@ access:
   browser: sso        # sso(默认)| anonymous | key
   tier: low           # 可选,仅 sso:low | medium | high(默认 low)
 data: false           # dynamic 可选:true 才有持久化 /data
+# healthcheck: /healthz  # dynamic 可选:HTTP 健康检查路径(缺省为 TCP 探针)
 ```
 
 ## 交付前自查清单(逐条核对你生成/改动的代码,不满足就先改)
@@ -69,3 +71,5 @@ data: false           # dynamic 可选:true 才有持久化 /data
 - [ ] (dynamic 鉴权)只信 `X-Cargo-Identity` 验签,`alg`/`iss`/`aud`/`exp` 全验。
 - [ ] 有 `Dockerfile`;`FROM` 用 `cargo/base/*`;带依赖锁文件(Go 允许空 `go.sum`)。
 - [ ] `cargo.yaml`:`name` 合法;`type`/`build` 对应;`access.browser` 合法;`access.tier`(若写)∈ {`low`,`medium`,`high`} 且 `browser` 为 `sso`。
+- [ ] (anonymous static)页面自带 CSP 时已放行 `https://m.sowii.net`;canvas 要读像素的 `<img>` 已加 `crossorigin="anonymous"`。
+- [ ] (dynamic,建议)长运行/易卡死的服务声明了 `healthcheck: /path` 并实现该 GET。
