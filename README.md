@@ -3,7 +3,7 @@
 > 🚀 **新成员快速接入**:打开 <https://claude.ai/claude-code/onboard/cKGyn9PuPwbI>,按你的客户端选路径——Claude Code(CLI / VS Code)三步装插件;claude.ai 网页 / Claude 桌面端配连接器——即可接入 picaa-cargo 部署工具。
 
 在 Claude Code 里部署与运维 [picaa-cargo](https://github.com/draw-your-dream/picaa-cargo) 的 artifacts。
-插件通过**远程 OAuth MCP**(`https://cargo.picaa.com/mcp`)暴露 17 个工具:远程 deploy
+插件通过**远程 OAuth MCP**(`https://cargo.picaa.com/mcp`)暴露 19 个工具:远程 deploy
 (`deploy_begin` / `deploy_commit` / `deploy_files`)、`status` / `logs` / `rollback`、
 secrets / tokens 管理等(SSO 登录、以你自己的身份走 RBAC),并配套部署 know-how skills
 (`deploy` / `troubleshoot` / `conventions`)。
@@ -61,11 +61,13 @@ claude mcp logout "plugin:picargo:picaa-cargo" && claude mcp login "plugin:picar
 ## 可用工具(远程 MCP)
 
 `capabilities`(自描述)、`get_conventions`(部署约定)、`status` / `logs` / `secrets_list` /
-`tokens_list` / `build_status`(只读)、`rollback` / `secrets_set` / `secrets_rm` /
-`tokens_issue` / `tokens_revoke` / `delete` / `restore`(写操作,均带 confirm 门)、以及远程
+`tokens_list` / `access_key_show` / `build_status`(只读)、`rollback` / `secrets_set` / `secrets_rm` /
+`tokens_issue` / `tokens_revoke` / `delete` / `restore` / `access_key_rotate`(写操作,均带 confirm 门)、以及远程
 deploy 三件套 `deploy_begin`(发上传坐标,无 confirm)→ `curl -T` 上传 → `deploy_commit`
 (confirm 门;static 同步 / platform 异步用 `build_status` 轮询);纯聊天环境用
-`deploy_files`(confirm 门,内联 ≤2MB,仅 static)。不确定能做什么时先调 `capabilities`。
+`deploy_files`(confirm 门,内联 ≤2MB,仅 static)。
+`key` 模式访问密钥:`access_key_show`(元数据;`reveal:true` 取明文)/`access_key_rotate`(签发/换新,可带 `ttl`,如 `never`=永不过期)。
+不确定能做什么时先调 `capabilities`。
 
 > 注意:`preflight` / 裸 `deploy` 是本地 CLI 命令,**不在**远程 MCP 工具集里。
 > sso artifact 支持**密级门禁** `access.tier: low|medium|high`(默认 low;发布者本人始终可见;

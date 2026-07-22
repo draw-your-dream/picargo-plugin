@@ -29,7 +29,7 @@ description: 当 picaa-cargo 上的 artifact 部署失败、运行/访问异常(
 | 带 `Authorization` 头访问却 `401` | `Authorization` 在 `*.at.sowii.net` 被平台保留给机器令牌 `cargo_tok_*`,其它任何值(自定义 JWT/Basic/无效令牌)都被网关直接 401 | 换一个自定义头做鉴权,或用 `tokens_issue` 签发有效 `cargo_tok_*` 令牌。 |
 | **sso artifact 某些用户访问被 `403`「无权访问/需要更高密级」** | 该 artifact 的 `access.tier` 密级高于用户所在用户组 | 正常拦截:确认该用户是否应有权限。若应有 → 平台侧把用户加入相应组;若门开得太严 → 改低 `access.tier` 重新部署。 |
 | **发布者本人能看、其他所有人一律 `403`** | 极可能 `access.tier` **拼错**(未知 tier → fail-closed,只有 owner 可见,且部署不报错) | 核对 `access.tier` 拼写(只能 `low`/`medium`/`high`),改正后重新部署。 |
-| `key` 模式访客总被弹回密钥输入页 | 密钥错误/过期/已被 rotate,或该 artifact 已被软删 | 确认 artifact 未软删;分发最新密钥(access-key 管理是 **CLI 专属**:`picargo access-key show --reveal` 取回 / `rotate` 换新;rotate 后旧密钥**立即失效**且在线访客被断开,需重新分发)。 |
+| `key` 模式访客总被弹回密钥输入页 | 密钥错误/过期/已被 rotate,或该 artifact 已被软删;**经远程 MCP 部署的 key 模式 artifact 从未签发过密钥**也是此症状 | 确认 artifact 未软删;分发最新密钥:CLI `picargo access-key show --reveal` 取回 / `rotate [--ttl <dur|never>]` 换新,远程 MCP 用 `access_key_show`(`reveal:true`)/ `access_key_rotate`。rotate 后旧密钥**立即失效**且在线访客被断开,需重新分发;频繁过期烦人 → 设 `access.key_ttl: never`(或 rotate `--ttl never`)。 |
 | 部署成功但访问 `404` | `name` 不合法(大写/带点,本应被两侧校验拦下);或动态服务没监听 `$PORT`/`0.0.0.0` | 检查 `name` 合法性;检查进程确实 `0.0.0.0:$PORT` 监听。 |
 | 硬编码 `localhost` 警告 | 前端写死了 `localhost:port`/`127.0.0.1:port` | 前端改相对路径调后端(`/api/...`)。 |
 | `/data` 写入报磁盘满 | 超过 `data_quota`(软执行,有分钟级滞后) | 调大 `data_quota`(**只增不减**)或清理数据。 |

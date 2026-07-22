@@ -43,6 +43,7 @@ description: 为将要部署到 picaa-cargo(*.at.sowii.net)的代码——前端
   - ⚠️ 只能写 `low` / `medium` / `high`:拼错或写未知值 → **除发布者外无人可访问**(fail-closed),且**部署时不报错**(发布者自己仍看得到,极易误判"正常")——务必核对拼写。
   - `access.browser` 为 `anonymous` / `key` 时写了 `tier` → **422**。
   - 密级 → 具体用户组的映射由平台侧维护、可随时调整,清单里**只写别名、不写组名**。
+- `access.browser: key` 的密钥有效期由 `access.key_ttl` 控制(可选,缺省 7 天):接受 Go duration(`"720h"`)或 `"7d"`/`"30d"` 简写;`"0"`/`"never"` = **永不过期**(对组织外长期分享用它,免周期性换钥重发链接)。改 `key_ttl` 只影响之后新签发/轮换的密钥,不追改已发密钥 → 要立即生效须 rotate 一次(CLI `picargo access-key rotate --slug <s> [--ttl <dur|never>]`,`--ttl` 为仅本次的一次性覆盖;远程 MCP 用 `access_key_rotate`,同样可带 `ttl`)。rotate 后旧密钥**立即失效**、在线访客被断开,须重新分发。
 - `access.browser: anonymous` 的静态 artifact,资源文件(非 HTML/JS)经 CDN(`https://m.sowii.net`)**跨域**分发 → 页面自带 CSP 时须在 `img-src`/`font-src`/`media-src`/`connect-src` 放行 `https://m.sowii.net`;canvas 要读像素的 `<img>` 加 `crossorigin="anonymous"`;fetch 这类资源勿用 `credentials: 'include'` 或 `redirect: 'error'`。HTML 与 JS **仍同源**由平台 serve,Worker/Service Worker 不受影响 → 少一项 = CSP 拦截资源加载 / canvas taint / fetch 被浏览器拒绝。
 
 ## `cargo.yaml` 最小形状
@@ -57,6 +58,7 @@ build:
 access:
   browser: sso        # sso(默认)| anonymous | key
   tier: low           # 可选,仅 sso:low | medium | high(默认 low)
+  # key_ttl: never    # 可选,仅 key 模式:密钥有效期(7d/720h/never;缺省 7d)
 data: false           # dynamic 可选:true 才有持久化 /data
 # healthcheck: /healthz  # dynamic 可选:HTTP 健康检查路径(缺省为 TCP 探针)
 ```
