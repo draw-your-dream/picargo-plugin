@@ -73,6 +73,7 @@ VS Code Claude 插件与 CLI 共用同一份配置,CLI 装好即两处可用。
 - **写操作(均有 confirm 确认门)**:`rollback`、`secrets_set` / `secrets_rm`、`tokens_issue` / `tokens_revoke`、`delete` / `restore`、`access_key_rotate`(访问密钥签发/换新,可带 ttl)。
 - **远程部署**:`deploy_begin`(发上传坐标,无 confirm)→ `curl -T` 上传 → `deploy_commit`(confirm 门;static 同步返回 / platform 异步,用 `build_status` 轮询到 ready;≤1GB)。纯聊天小站用 `deploy_files`(confirm 门,内联 ≤2MB,仅 static)。`preflight` / 裸 `deploy` 是本地 CLI 命令,不在远程工具集里。
 - **密级门禁**:sso artifact 可在部署时指定 `access.tier: low | medium | high`(默认 low=全员;medium=业务管理层;high=公司管理层;发布者本人始终可见自己的内容)。只能写这三个别名——拼错会导致除发布者外无人可访问且部署不报错。
+- **CDN 直连(灰度中)**:`anonymous` + 静态站点检测合格会自动升级为直连(`m.sowii.net/sites/<slug>/`,更快;旧域名自动 301),不合格自动退回普通模式,不影响部署成功;该特性平台侧未全量开启前,部署结果里不会出现这行,详见 conventions skill。
 - **skills(部署 know-how,仅路径 A)**:`deploy`(判环境选路径 → 自查 → 部署 → 读结果)、`troubleshoot`(先取证再对症 + 错误对照表)、`conventions`(可部署代码硬约束 + 交付前自查清单)。
 
 不确定能做什么时,先让它调 `capabilities`。

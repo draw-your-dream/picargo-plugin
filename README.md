@@ -72,6 +72,7 @@ deploy 三件套 `deploy_begin`(发上传坐标,无 confirm)→ `curl -T` 上传
 > 注意:`preflight` / 裸 `deploy` 是本地 CLI 命令,**不在**远程 MCP 工具集里。
 > sso artifact 支持**密级门禁** `access.tier: low|medium|high`(默认 low;发布者本人始终可见;
 > 详见 conventions skill 或 `get_conventions`)。
+> `anonymous` + `type: static` 站点合格时会自动升级为 **CDN 直连**(`m.sowii.net/sites/<slug>/`,该特性上线状态=灰度中,详见 conventions skill)。
 
 ## 仓库结构
 

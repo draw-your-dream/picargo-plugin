@@ -31,6 +31,8 @@ description: 当 picaa-cargo 上的 artifact 部署失败、运行/访问异常(
 | **发布者本人能看、其他所有人一律 `403`** | 极可能 `access.tier` **拼错**(未知 tier → fail-closed,只有 owner 可见,且部署不报错) | 核对 `access.tier` 拼写(只能 `low`/`medium`/`high`),改正后重新部署。 |
 | `key` 模式访客总被弹回密钥输入页 | 密钥错误/过期/已被 rotate,或该 artifact 已被软删;**经远程 MCP 部署的 key 模式 artifact 从未签发过密钥**也是此症状 | 确认 artifact 未软删;分发最新密钥:CLI `picargo access-key show --reveal` 取回 / `rotate [--ttl <dur|never>]` 换新,远程 MCP 用 `access_key_show`(`reveal:true`)/ `access_key_rotate`。rotate 后旧密钥**立即失效**且在线访客被断开,需重新分发;频繁过期烦人 → 设 `access.key_ttl: never`(或 rotate `--ttl never`)。 |
 | 部署成功但访问 `404` | `name` 不合法(大写/带点,本应被两侧校验拦下);或动态服务没监听 `$PORT`/`0.0.0.0` | 检查 `name` 合法性;检查进程确实 `0.0.0.0:$PORT` 监听。 |
+| **CDN 直连站(`m.sowii.net/sites/<slug>/`)某些资源 `404`** | 产物里有根绝对路径引用(`src=`/`href=`/`srcset=`/`<base href>`/CSS `url(...)` 以单个 `/` 开头),在共享域下解析到错路径;或是**检测漏过**的启发式盲区——JS 里动态拼出的根绝对引用(如 `fetch('/x')`)测不到 | 查产物里有没有上述根绝对引用,改成相对路径;若是运行时才发现的动态拼接盲区,在 `cargo.yaml` 写 `access.cdn: "origin"` 显式退出直连,不用等平台改检测逻辑。 |
+| **直连站前端路由深链 `404`(如 `/foo/bar`)** | 直连入口是纯静态目录服务,不支持 history 模式 SPA 回退,不存在的路径直接收到 OSS 原生 404 XML(不会退回 `index.html`) | 前端改用 hash 路由(`#/foo/bar`);或该站放弃直连,`cargo.yaml` 写 `access.cdn: "origin"` 走现状架构(支持 SPA 前端自行处理)。 |
 | 硬编码 `localhost` 警告 | 前端写死了 `localhost:port`/`127.0.0.1:port` | 前端改相对路径调后端(`/api/...`)。 |
 | `/data` 写入报磁盘满 | 超过 `data_quota`(软执行,有分钟级滞后) | 调大 `data_quota`(**只增不减**)或清理数据。 |
 | platform 构建提交后迟迟没上线 | `deploy_commit` 的 platform 构建是**异步**的,不是卡住 | 用 `build_status` 轮询:`building` 继续等;`ready` 即已上线;`failed_build` → 按其返回信息对照上表(密钥/锁文件/Dockerfile/基础镜像)排查后重新提交。 |
