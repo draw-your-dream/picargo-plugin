@@ -1,7 +1,7 @@
 {
   "name": "picargo",
   "displayName": "picargo — picaa-cargo 部署",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "在 Claude Code 里部署与运维 picaa-cargo artifacts:通过远程 OAuth MCP(cargo.picaa.com/mcp)暴露 deploy/status/logs/rollback/secrets/tokens 等工具(SSO 登录),并配套部署 know-how skills",
   "author": {
     "name": "picaa"

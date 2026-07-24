@@ -46,7 +46,7 @@ description: 为将要部署到 picaa-cargo(*.at.sowii.net)的代码——前端
 - `access.browser: key` 的密钥有效期由 `access.key_ttl` 控制(可选,缺省 7 天):接受 Go duration(`"720h"`)或 `"7d"`/`"30d"` 简写;`"0"`/`"never"` = **永不过期**(对组织外长期分享用它,免周期性换钥重发链接)。改 `key_ttl` 只影响之后新签发/轮换的密钥,不追改已发密钥 → 要立即生效须 rotate 一次(CLI `picargo access-key rotate --slug <s> [--ttl <dur|never>]`,`--ttl` 为仅本次的一次性覆盖;远程 MCP 用 `access_key_rotate`,同样可带 `ttl`)。rotate 后旧密钥**立即失效**、在线访客被断开,须重新分发。
 - `access.browser: anonymous` 的静态 artifact,资源文件(非 HTML/JS)经 CDN(`https://m.sowii.net`)**跨域**分发 → 页面自带 CSP 时须在 `img-src`/`font-src`/`media-src`/`connect-src` 放行 `https://m.sowii.net`;canvas 要读像素的 `<img>` 加 `crossorigin="anonymous"`;fetch 这类资源勿用 `credentials: 'include'` 或 `redirect: 'error'`。HTML 与 JS **仍同源**由平台 serve,Worker/Service Worker 不受影响 → 少一项 = CSP 拦截资源加载 / canvas taint / fetch 被浏览器拒绝。
 - **CDN 直连模式(灰度中)**:`anonymous` + `type: static` 的站,部署期对 `build.output` 产物做启发式扫描,全部通过才把**整站(含 HTML/JS)**升级为直连(`https://m.sowii.net/sites/<slug>/`,恒带尾斜杠;旧域名 `<slug>.at.sowii.net` 的 GET/HEAD 不带 `Authorization` 头会 `301` 过去);任一不合格自动降级回现状架构(**不阻断部署**),部署结果逐条列出不合格文件与原因 → 想拿直连收益,产物里不能出现:HTML 的 `src`/`href`/`srcset`、`<base href="...">`、CSS `url(...)` 值以单个 `/` 开头(协议相对 `//` 与 `data:`/`http(s):` 除外);HTML/JS 文本里出现 `serviceWorker.register`(普通 `new Worker(...)` 不受影响)。
-  - 检测是**启发式**,JS 内动态拼出的根绝对引用(如 `fetch('/x')`)测不到 → 通过检测但运行时实际访问异常时,在 `cargo.yaml` 写 `access.cdn: "origin"` 显式退出直连(唯一合法值 `origin`;**仅在** `access.browser: anonymous` 且 `type: static` 下有意义——写在 `sso`/`key` 站上**不报错、静默忽略**;非法值,或 `type: dynamic` 下出现该字段 → **422**)。
+  - 检测是**启发式**,JS 内动态拼出的根绝对引用(如 `fetch('/x')`)测不到,通过检测但运行时实际访问异常时,在 `cargo.yaml` 写 `access.cdn: "origin"` 切到**全代理模式**(唯一合法值 `origin`;**仅在** `access.browser: anonymous` 且 `type: static` 下有意义——写在 `sso`/`key` 站上**不报错、静默忽略**;非法值,或 `type: dynamic` 下出现该字段 → **422**):不直连、资源也不再走 CDN,全部请求改经 `<slug>.at.sowii.net` 流式回源(零重定向、零跨域)——**不是**"退出直连但资源仍 302"的现状架构,而是彻底关闭 CDN,适合 CSP 严格 / 要求单一来源 / 不希望内容出现在共享 CDN 域的站,代价是这部分字节全走平台集群出口(放弃 CDN 卸带宽) → 选择或翻转到该模式时,平台会**清空该站在 CDN 上的全部既有内容**(`sites/` 与 `artifacts/` 双前缀都清,边缘缓存 **≤1h** 收敛),不要假设翻转后旧内容立刻不可访问。
   - 直连站**不支持** history 模式深链回退(访问不存在路径直接收到 OSS 原生 404 XML,不会退回 `index.html`)→ SPA 请改用 hash 路由(`#/path`);下线/翻新(软删、翻回非 anonymous、redeploy 转不合格)**≤60s** 内边缘收敛,不要假设操作后立刻生效;所有直连站共享同一个 `m.sowii.net` 源 → 不要往直连站存 `localStorage`/未限定 `Path` 的 cookie 里放敏感数据。
   - **该特性上线状态=灰度中**:未开启前部署输出不含"CDN 直连"这一行,**看不到不代表站点不合格**,先确认平台是否已开启。
 
@@ -63,7 +63,7 @@ access:
   browser: sso        # sso(默认)| anonymous | key
   tier: low           # 可选,仅 sso:low | medium | high(默认 low)
   # key_ttl: never    # 可选,仅 key 模式:密钥有效期(7d/720h/never;缺省 7d)
-  # cdn: origin        # 可选,仅 anonymous+static 有意义:显式退出 CDN 直连(唯一合法值 origin;缺省=自动检测)
+  # cdn: origin        # 可选,仅 anonymous+static 有意义:切到全代理(彻底关 CDN,零重定向;唯一合法值 origin;缺省=自动检测)
 data: false           # dynamic 可选:true 才有持久化 /data
 # healthcheck: /healthz  # dynamic 可选:HTTP 健康检查路径(缺省为 TCP 探针)
 ```
